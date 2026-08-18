@@ -9,9 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.3.1",
+    "@fortawesome/free-regular-svg-icons": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/react-fontawesome": "^3.5.0",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-icons": "^5.7.0",
+    "react-router-dom": "^7.18.2",
+    "recharts": "^3.10.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
