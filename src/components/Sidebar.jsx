@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { endpoints, clearAuthSession } from "../api/client";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -17,6 +18,8 @@ import {
   faChartColumn,
   faFileLines,
   faGear,
+  faUser,
+  faWandMagicSparkles,
 } from "@fortawesome/free-solid-svg-icons";
 
 import logo from "../assets/logo.jpeg";
@@ -35,10 +38,22 @@ const NAV_ITEMS = [
   { to: "/analytics", label: "Analytics", icon: faChartColumn },
   { to: "/reports", label: "Reports", icon: faFileLines },
   { to: "/settings", label: "Settings", icon: faGear },
+  { to: "/profile", label: "Profile", icon: faUser },
+  { to: "/recommendations", label: "Recommendations", icon: faWandMagicSparkles },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await endpoints.logout();
+    } finally {
+      clearAuthSession();
+      router.push("/login");
+    }
+  };
 
   return (
     <aside className="sidebar">
@@ -76,6 +91,7 @@ export default function Sidebar() {
           <span>6 sensors online</span>
         </div>
         <div className="sidebar-footer-farm">Urban Farm � Lagos, NG</div>
+        <button className="sidebar-logout" type="button" onClick={handleLogout}>Sign out</button>
       </div>
     </aside>
   );

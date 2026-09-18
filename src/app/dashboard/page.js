@@ -31,10 +31,18 @@ function timeAgo(iso) {
 }
 
 export default function Dashboard() {
-  const { data, loading } = useFetch(() => endpoints.dashboardOverview(), []);
+  const { data, loading, error } = useFetch(() => endpoints.dashboardOverview(), []);
 
-  if (loading || !data) {
+  if (loading) {
     return <div className="loading-text">Loading dashboard overview…</div>;
+  }
+
+  if (error) {
+    return <div className="loading-text">Unable to load your dashboard: {error.message}</div>;
+  }
+
+  if (!data) {
+    return <div className="loading-text">No dashboard data available.</div>;
   }
 
   const farms = data.farms || [];

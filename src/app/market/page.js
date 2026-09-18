@@ -31,7 +31,7 @@ export default function Market() {
             </thead>
             <tbody>
               {data?.map((m) => {
-                const Icon = TREND_ICON[m.trend] || Minus;
+                const Icon = TREND_ICON[m.trend] || faMinus;
                 return (
                   <tr key={m.id}>
                     <td style={{ fontWeight: 600 }}>{m.commodity}</td>
