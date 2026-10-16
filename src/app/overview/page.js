@@ -1,4 +1,6 @@
 'use client';
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHouse,
@@ -6,7 +8,6 @@ import {
   faLayerGroup,
   faCloudSun,
   faDroplet,
-  faBug,
   faPaw,
   faChartLine,
   faChartColumn,
@@ -14,9 +15,10 @@ import {
   faGear,
 } from "@fortawesome/free-solid-svg-icons";
 
-import { endpoints, DEFAULT_FARM_ID } from "../../api/client"
+import { endpoints } from "../../api/client"
 import { useFetch } from "../../api/useFetch";
 import PageHeader from "../../components/PageHeader";
+import ExpandableList from "../../components/ExpandableList";
 import StatCard from "../../components/StatCard";
 import Badge from "../../components/Badge";
 import "../globals.css" 
@@ -41,14 +43,20 @@ function formatWhen(iso) {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export default function FarmOverview() {
-  const { data, loading } = useFetch(() => endpoints.farmOverview(DEFAULT_FARM_ID), []);
+function FarmOverviewContent() {
+  const searchParams = useSearchParams();
+  const farmId = searchParams.get("farm_id") || DEFAULT_FARM_ID;
+  const { data, loading } = useFetch(() => endpoints.farmOverview(farmId), [farmId]);
+  const { data: nextHourWeather, loading: weatherLoading, error: weatherError } = useFetch(
+    () => endpoints.nextHourWeather(farmId),
+    [farmId]
+  );
 
   if (loading || !data) {
     return <div className="loading-text">Loading farm overview…</div>;
   }
 
-  const { farm, active_crops, open_pest_alerts, livestock_count, latest_soil, latest_weather, upcoming_irrigation, recent_alerts } = data;
+  const { farm, active_crops, total_crop_yield_kg, livestock_count, latest_soil, upcoming_irrigation, recent_alerts } = data;
 
   return (
     <>
@@ -60,7 +68,12 @@ export default function FarmOverview() {
 
       <div className="grid grid-4">
         <StatCard icon={faSeedling} label="Active crops" value={active_crops} meta="Across all plots" />
-        <StatCard icon={faBug} label="Open pest alerts" value={open_pest_alerts} meta="Needs attention" />
+        <StatCard
+          icon={faChartLine}
+          label="Total crop yield"
+          value={`${total_crop_yield_kg.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg`}
+          meta="Across all crops"
+        />
         <StatCard icon={faPaw} label="Livestock groups" value={livestock_count} meta="Poultry & aquaculture" />
         <StatCard
           icon={faLayerGroup}
@@ -73,19 +86,28 @@ export default function FarmOverview() {
       <div className="grid grid-2 section-gap">
         <div className="card">
           <div className="card-title">
-            <span className="flex-row"><FontAwesomeIcon icon={faCloudSun} style={{ fontSize: 14 }} /> Current conditions</span>
+            <span className="flex-row"><FontAwesomeIcon icon={faCloudSun} style={{ fontSize: 14 }} /> Weather forecast · next hour</span>
           </div>
-          {latest_weather ? (
-            <>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8 }}>
-                <span className="stat-value" style={{ fontSize: 34 }}>{latest_weather.temperature_c.toFixed(0)}°C</span>
-                <span className="muted" style={{ fontSize: 13 }}>{latest_weather.humidity_pct.toFixed(0)}% humidity</span>
+          {weatherLoading ? (
+            <p className="muted">Loading forecast…</p>
+          ) : weatherError ? (
+            <p className="auth-error" role="alert">Weather forecast unavailable: {weatherError.message}</p>
+          ) : nextHourWeather?.forecast_at ? (
+            <div style={{ padding: 14, borderRadius: "var(--radius-md)", background: "var(--cream-50)" }}>
+              <div style={{ fontWeight: 600, fontSize: 12.5, marginBottom: 6 }}>
+                Around {new Date(nextHourWeather.forecast_at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
               </div>
-              <p className="muted" style={{ fontSize: 13.5, marginBottom: 10 }}>{latest_weather.forecast_summary}</p>
-              <div className="badge badge-info">{latest_weather.recommended_action}</div>
-            </>
+              <div className="stat-value" style={{ fontSize: 30 }}>{nextHourWeather.temperature_c?.toFixed(0) ?? "—"}°C</div>
+              <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>{nextHourWeather.condition}</div>
+              <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+                {nextHourWeather.humidity_pct ?? "—"}% humidity · {nextHourWeather.rainfall_mm.toFixed(1)} mm rain
+              </div>
+              <div className="muted" style={{ fontSize: 12, marginTop: 3 }}>
+                {nextHourWeather.wind_kph.toFixed(0)} kph wind · {nextHourWeather.precipitation_probability_pct}% rain chance
+              </div>
+            </div>
           ) : (
-            <p className="muted">No weather data yet.</p>
+            <p className="muted">No forecast is available for the next hour.</p>
           )}
         </div>
 
@@ -94,8 +116,10 @@ export default function FarmOverview() {
             <span className="flex-row"><FontAwesomeIcon icon={faDroplet} style={{ fontSize: 14 }} /> Upcoming irrigation</span>
           </div>
           {upcoming_irrigation.length === 0 && <p className="muted">Nothing scheduled.</p>}
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {upcoming_irrigation.map((ev) => (
+          <ExpandableList
+            items={upcoming_irrigation}
+            style={{ display: "flex", flexDirection: "column", gap: 12 }}
+            renderItem={(ev) => (
               <div key={ev.id} className="flex-row" style={{ justifyContent: "space-between" }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 13.5 }}>{ev.zone}</div>
@@ -103,15 +127,17 @@ export default function FarmOverview() {
                 </div>
                 <Badge tone="scheduled">{formatWhen(ev.scheduled_at)}</Badge>
               </div>
-            ))}
-          </div>
+            )}
+          />
         </div>
       </div>
 
       <div className="card section-gap">
         <div className="card-title">Recent alerts</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-          {recent_alerts.map((a) => (
+        <ExpandableList
+          items={recent_alerts}
+          style={{ display: "flex", flexDirection: "column", gap: 0 }}
+          renderItem={(a) => (
             <div key={a.id} className="settings-row" style={{ padding: "12px 0" }}>
               <div>
                 <div style={{ fontSize: 13.5 }}>{a.message}</div>
@@ -121,9 +147,17 @@ export default function FarmOverview() {
               </div>
               <Badge tone={severityTone[a.severity] || "info"}>{a.severity}</Badge>
             </div>
-          ))}
-        </div>
+          )}
+        />
       </div>
     </>
+  );
+}
+
+export default function FarmOverview() {
+  return (
+    <Suspense fallback={<div className="loading-text">Loading farm overview…</div>}>
+      <FarmOverviewContent />
+    </Suspense>
   );
 }

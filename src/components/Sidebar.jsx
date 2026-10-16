@@ -7,7 +7,6 @@ import { endpoints, clearAuthSession } from "../api/client";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faBars,
-  faHouse,
   faSeedling,
   faLayerGroup,
   faCloudSun,
@@ -15,7 +14,6 @@ import {
   faBug,
   faPaw,
   faChartLine,
-  faChartColumn,
   faFileLines,
   faGear,
   faUser,
@@ -27,7 +25,6 @@ import logo from "../assets/logo.jpeg";
 
 const NAV_ITEMS = [
   { to: "/dashboard", label: "Dashboard", icon: faBars, end: true },
-  { to: "/overview", label: "Farms", icon: faHouse, end: true },
   { to: "/crops", label: "Crops", icon: faSeedling },
   { to: "/soil", label: "Soil Health", icon: faLayerGroup },
   { to: "/weather", label: "Weather Intelligence", icon: faCloudSun },
@@ -35,11 +32,10 @@ const NAV_ITEMS = [
   { to: "/pests", label: "Pest Alert", icon: faBug },
   { to: "/livestock", label: "Livestock", icon: faPaw },
   { to: "/market", label: "Market Intelligence", icon: faChartLine },
-  { to: "/analytics", label: "Analytics", icon: faChartColumn },
   { to: "/reports", label: "Reports", icon: faFileLines },
   { to: "/settings", label: "Settings", icon: faGear },
   { to: "/profile", label: "Profile", icon: faUser },
-  { to: "/recommendations", label: "Recommendations", icon: faWandMagicSparkles },
+  { to: "/ai_recommendations", label: "Recommendations", icon: faWandMagicSparkles },
 ];
 
 export default function Sidebar() {

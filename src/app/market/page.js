@@ -7,6 +7,7 @@ import { endpoints } from "../../api/client";
 import { useFetch } from "../../api/useFetch";
 import PageHeader from "../../components/PageHeader";
 import Badge from "../../components/Badge";
+import ExpandableList from "../../components/ExpandableList";
 
 const TREND_ICON = { rising: faArrowTrendUp, falling: faArrowTrendDown, stable: faMinus };
 
@@ -29,8 +30,11 @@ export default function Market() {
             <thead>
               <tr><th>Commodity</th><th>Region</th><th>Price / kg</th><th>Trend</th><th>Demand</th></tr>
             </thead>
-            <tbody>
-              {data?.map((m) => {
+            <ExpandableList
+              as="tbody"
+              items={data || []}
+              colSpan={5}
+              renderItem={(m) => {
                 const Icon = TREND_ICON[m.trend] || faMinus;
                 return (
                   <tr key={m.id}>
@@ -45,8 +49,8 @@ export default function Market() {
                     <td style={{ textTransform: "capitalize" }}>{m.demand_level}</td>
                   </tr>
                 );
-              })}
-            </tbody>
+              }}
+            />
           </table>
         </div>
       </div>
