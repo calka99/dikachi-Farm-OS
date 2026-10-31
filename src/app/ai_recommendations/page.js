@@ -12,6 +12,7 @@ export default function RecommendationsPage() {
   const [generating, setGenerating] = useState(false);
   const [generationError, setGenerationError] = useState("");
   const [notice, setNotice] = useState("");
+  const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
     if (farms.length && !farms.some((farm) => String(farm.id) === String(selectedFarmId))) {
@@ -28,6 +29,7 @@ export default function RecommendationsPage() {
     try {
       const result = await endpoints.generateRecommendations(selectedFarmId);
       setNotice(result.detail);
+      setRecommendations(Array.isArray(result.recommendations) ? result.recommendations : []);
     } catch (requestError) {
       setGenerationError(requestError.message);
     } finally {
@@ -64,6 +66,7 @@ export default function RecommendationsPage() {
                   setSelectedFarmId(event.target.value);
                   setGenerationError("");
                   setNotice("");
+                  setRecommendations([]);
                 }}
                 disabled={generating}
                 required
@@ -83,6 +86,30 @@ export default function RecommendationsPage() {
             </button>
           </form>
         </div>
+      )}
+
+      {recommendations.length > 0 && (
+        <section className="section-gap" aria-labelledby="recommendation-results-title">
+          <h2 id="recommendation-results-title">Generated recommendations</h2>
+          <div className="recommendation-results">
+            {recommendations.map((recommendation) => (
+              <article className="card" key={recommendation.id}>
+                <div className="recommendation-heading">
+                  <h3>{recommendation.title}</h3>
+                  <span className={`badge badge-${recommendation.priority}`}>
+                    {recommendation.priority}
+                  </span>
+                </div>
+                <div className="flex-row" style={{ marginTop: 10 }}>
+                  <span className="badge badge-info">{recommendation.category}</span>
+                </div>
+                <p className="muted" style={{ lineHeight: 1.6, marginTop: 12 }}>
+                  {recommendation.message}
+                </p>
+              </article>
+            ))}
+          </div>
+        </section>
       )}
     </>
   );

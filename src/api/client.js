@@ -1,5 +1,5 @@
 'use client';
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+const API_BASE = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://dikachifarmos-backend.onrender.com").replace(/\/+$/, "");
 
 import React, { useState, useEffect } from 'react';
 

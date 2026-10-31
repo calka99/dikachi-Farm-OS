@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { endpoints, clearAuthSession } from "../api/client";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -20,45 +20,63 @@ import {
   faWandMagicSparkles,
 } from "@fortawesome/free-solid-svg-icons";
 
-import logo from "../assets/logo.jpeg";
+import logo from "../assets/LogoM.jpeg";
 
 
 const NAV_ITEMS = [
-  { to: "/dashboard", label: "Dashboard", icon: faBars, end: true },
+  { to: "/dashboard", label: "Farm Overview", icon: faBars, end: true },
   { to: "/crops", label: "Crops", icon: faSeedling },
   { to: "/soil", label: "Soil Health", icon: faLayerGroup },
-  { to: "/weather", label: "Weather Intelligence", icon: faCloudSun },
+  { to: "/weather", label: "Weather", icon: faCloudSun },
   { to: "/irrigation", label: "Irrigation", icon: faDroplet },
-  { to: "/pests", label: "Pest Alert", icon: faBug },
+  { to: "/pests", label: "Pest Alerts", icon: faBug },
+  { to: "/market", label: "Market Prices", icon: faChartLine },
   { to: "/livestock", label: "Livestock", icon: faPaw },
-  { to: "/market", label: "Market Intelligence", icon: faChartLine },
   { to: "/reports", label: "Reports", icon: faFileLines },
-  { to: "/settings", label: "Settings", icon: faGear },
-  { to: "/profile", label: "Profile", icon: faUser },
   { to: "/ai_recommendations", label: "Recommendations", icon: faWandMagicSparkles },
+   { to: "/settings", label: "Settings", icon: faGear },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const router = useRouter();
+  const [profileName, setProfileName] = useState("");
 
-  const handleLogout = async () => {
-    try {
-      await endpoints.logout();
-    } finally {
-      clearAuthSession();
-      router.push("/login");
-    }
-  };
+  useEffect(() => {
+    const updateProfileName = () => {
+      const storedUser = localStorage.getItem("farmos_user");
+      if (!storedUser) {
+        setProfileName("");
+        return;
+      }
+
+      try {
+        const user = JSON.parse(storedUser);
+        setProfileName(typeof user.username === "string" ? user.username : "");
+      } catch (error) {
+        console.error("Unable to read the saved profile name.", error);
+        setProfileName("");
+      }
+    };
+
+    updateProfileName();
+    window.addEventListener("storage", updateProfileName);
+    window.addEventListener("farmos-user-updated", updateProfileName);
+    return () => {
+      window.removeEventListener("storage", updateProfileName);
+      window.removeEventListener("farmos-user-updated", updateProfileName);
+    };
+  }, []);
 
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <img src={logo.src} alt="Farm Logo" className="sidebar-logo" />
+        <div className="sidebar-brand-logo">
+          <img src={logo.src} alt="dikachiFarmOS Logo" className="sidebar-logo" />
+        </div>
 
         <div>
-          <div className="sidebar-brand-name">dikachiFarmOS</div>
-          <div className="sidebar-brand-tag">Mapped. Nurtured. Sustainable.</div>
+          <div className="sidebar-brand-name">DikachiFarmOS</div>
+          <div className="sidebar-brand-tag">Smart Farming System</div>
         </div>
       </div>
 
@@ -67,6 +85,7 @@ export default function Sidebar() {
           const isActive = end
             ? pathname === to
             : pathname === to || pathname.startsWith(`${to}/`);
+          const itemLabel = to === "/profile" ? profileName || label : label;
 
           return (
             <Link
@@ -75,19 +94,22 @@ export default function Sidebar() {
               className={`sidebar-link${isActive ? " active" : ""}`}
             >
               <FontAwesomeIcon icon={icon} style={{ fontSize: "28px" }} />
-              <span>{label}</span>
+              <span>{itemLabel}</span>
             </Link>
           );
         })}
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-footer-row">
-          <span className="status-dot" />
-          <span>6 sensors online</span>
-        </div>
-        <div className="sidebar-footer-farm">Urban Farm � Lagos, NG</div>
-        <button className="sidebar-logout" type="button" onClick={handleLogout}>Sign out</button>
+        <Link
+          href="/profile"
+          className={`sidebar-profile${pathname === "/profile" || pathname.startsWith("/profile/") ? " active" : ""}`}
+          aria-current={pathname === "/profile" || pathname.startsWith("/profile/") ? "page" : undefined}
+        >
+          <span>{profileName || "Profile"}</span>
+          <FontAwesomeIcon icon={faUser} />
+        </Link>
+      
       </div>
     </aside>
   );

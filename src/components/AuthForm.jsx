@@ -35,8 +35,8 @@ export default function AuthForm({ mode = "login" }) {
   return (
     <main className="auth-page">
       <section className="auth-panel">
-        <div className="page-eyebrow">dikachiFarmOS / secure access</div>
-        <h1>{isRegister ? "Create your farm account" : "Welcome back"}</h1>
+        <div className="page-eyebrow">dikachiFarmOS / secure your digital farm</div>
+        <h1>{isRegister ? "Create your digital farm" : "Back to your digital farm"}</h1>
         <p className="auth-intro">
           {isRegister ? "Set up your workspace and start managing the field." : "Sign in to continue managing your farm operations."}
         </p>

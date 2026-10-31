@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
-import { endpoints } from "@/api/client";
+import { clearAuthSession, endpoints } from "@/api/client";
 
 const EMPTY_PROFILE = { username: "", email: "", first_name: "", last_name: "" };
 const EMPTY_PASSWORD_FORM = { current_password: "", new_password: "", confirm_password: "" };
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [profile, setProfile] = useState(EMPTY_PROFILE);
   const [passwordForm, setPasswordForm] = useState(EMPTY_PASSWORD_FORM);
   const [loading, setLoading] = useState(true);
@@ -18,6 +20,17 @@ export default function ProfilePage() {
   const [profileError, setProfileError] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+
+  const signOut = async () => {
+    setSigningOut(true);
+    try {
+      await endpoints.logout();
+    } finally {
+      clearAuthSession();
+      router.push("/login");
+    }
+  };
 
   useEffect(() => {
     endpoints.me()
@@ -39,6 +52,7 @@ export default function ProfilePage() {
       const updated = await endpoints.updateProfile(profile);
       setProfile(updated);
       localStorage.setItem("farmos_user", JSON.stringify(updated));
+      window.dispatchEvent(new Event("farmos-user-updated"));
       setProfileMessage("Profile updated successfully.");
     } catch (requestError) {
       setProfileError(requestError.message);
@@ -166,6 +180,15 @@ export default function ProfilePage() {
           </div>
         </>
       )}
+      <div className="card profile-card section-gap">
+        <h2 className="card-title">Account session</h2>
+        <p className="muted" style={{ marginBottom: 16 }}>
+          Sign out of your dikachiFarmOS account on this device.
+        </p>
+        <button className="auth-submit" type="button" onClick={signOut} disabled={signingOut}>
+          {signingOut ? "Signing out..." : "Sign out"}
+        </button>
+      </div>
     </>
   );
 }
